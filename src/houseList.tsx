@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
 import TableCell from '@mui/material/TableCell'
@@ -10,9 +10,24 @@ import TableRow from '@mui/material/TableRow'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 import Paper from '@mui/material/Paper'
-import { ConnectButton, SuccessButton } from './Component/Button/Button'
+import {
+  ConnectButton,
+  DeleteButton,
+  SuccessButton,
+  ViewDetailButton,
+} from './Component/Button/Button'
 import { InputWithLabel } from './Component/Input/InputWithLabel'
 import { getHouseList, HouseListResponse } from './services/getHouseList'
+import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
+import Select, { SelectChangeEvent } from '@mui/material/Select'
+import MenuItem from '@mui/material/MenuItem'
+import { getPostCode, PostCodeResponse } from './services/getPostCode'
+import {
+  getPostCodeDetail,
+  PostCodeDetailPayload,
+  PostCodeDetailResponse,
+} from './services/getPostCodeDetail'
 
 const Container = styled.div`
   display: flex;
@@ -50,10 +65,25 @@ const StyledTableRow = styled(TableRow)`
     }
   }
 `
+interface StyledTableCellProps {
+  showBorderBottom?: boolean
+}
 
-const StyledTableCell = styled(TableCell)`
+const StyledTableCell = styled(TableCell)<StyledTableCellProps>`
   &.MuiTableCell-root {
     border-right: 1px solid #e0e0e0;
+    ${(props) => {
+      if (props.showBorderBottom) {
+        return css`
+          border-bottom: 1px solid #e0e0e0;
+        `
+      } else {
+        return css`
+          border-bottom: 0;
+        `
+      }
+    }}
+
     padding: 8px;
     &:last-child {
       border-right: 0;
@@ -82,7 +112,6 @@ const Wrapper = styled.div<WrapperProps>`
     props.flexDirection ? props.flexDirection : 'row'};
   justify-content: ${(props) =>
     props.justifyContent ? props.justifyContent : 'center'};
-  width: 100%;
   margin-top: ${(props) => (props.marginTop ? `${props.marginTop}px` : 0)};
   margin-bottom: ${(props) =>
     props.marginBottom ? `${props.marginBottom}px` : 0};
@@ -124,12 +153,31 @@ const HouseList = () => {
     payload: [],
     count: 0,
   })
+
+  const [postCode, setPostCode] = useState<PostCodeResponse>({
+    payload: [],
+    count: 0,
+  })
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [selectedPostCode, setSelectedPostCode] = useState('')
+  const [postCodeDetail, setPostCodeDetail] = useState<PostCodeDetailPayload>({
+    average: '',
+    median: '',
+  })
 
-  useEffect(() => {
-    // fetch data
-  }, [])
+  const handleChangePostCode = async (event: SelectChangeEvent) => {
+    setSelectedPostCode(event.target.value)
+    if (baseUrl) {
+      const result = await getPostCodeDetail({
+        baseUrl,
+        postCode: selectedPostCode,
+      })
+      if (result?.payload !== undefined) {
+        setPostCodeDetail(result.payload)
+      }
+    }
+  }
 
   const handleSetBaseUrl = (
     event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
@@ -144,12 +192,20 @@ const HouseList = () => {
 
   const handleConnectHouseList = async () => {
     if (baseUrl) {
-      const res = await getHouseList({
-        baseUrl: baseUrl || '',
-        take: rowsPerPage,
-      })
-      if (res !== undefined) {
-        setHouseList(res)
+      const [houseListRes, postCodeRes] = await Promise.all([
+        getHouseList({
+          baseUrl: baseUrl || '',
+          take: rowsPerPage,
+        }),
+        getPostCode({
+          baseUrl: baseUrl || '',
+        }),
+      ])
+      if (houseListRes !== undefined) {
+        setHouseList(houseListRes)
+      }
+      if (postCodeRes !== undefined) {
+        setPostCode(postCodeRes)
       }
     }
   }
@@ -183,7 +239,11 @@ const HouseList = () => {
   return (
     <Container>
       <HeaderContainer>
-        <Wrapper justifyContent='space-between' marginTop={41}>
+        <Wrapper
+          justifyContent='space-between'
+          marginTop={41}
+          style={{ width: '100%' }}
+        >
           <InputWithLabel
             width={250}
             label='URL'
@@ -223,7 +283,11 @@ const HouseList = () => {
                   <TableRow>
                     {headCells.map((cell) => {
                       return (
-                        <StyledTableCell key={cell.id} align='center'>
+                        <StyledTableCell
+                          key={cell.id}
+                          align='center'
+                          showBorderBottom={true}
+                        >
                           <Typography fontWeight={700}>{cell.label}</Typography>
                         </StyledTableCell>
                       )
@@ -252,17 +316,23 @@ const HouseList = () => {
                             {house.price}
                           </StyledTableCell>
                           <StyledTableCell align='center'>
-                            <Box>
-                              <SuccessButton
-                                variant='contained'
-                                label='CONNECT'
-                                // width={50}
-                              />
-                              <SuccessButton
-                                variant='contained'
-                                label='CONNECT'
-                                // width={50}
-                              />
+                            <Box
+                              display='flex'
+                              flexDirection='row'
+                              justifyContent='center'
+                            >
+                              <Box marginRight='4px'>
+                                <ViewDetailButton
+                                  variant='contained'
+                                  label='VIEW DETAIL'
+                                />
+                              </Box>
+                              <Box>
+                                <DeleteButton
+                                  variant='outlined'
+                                  label='DELETE'
+                                />
+                              </Box>
                             </Box>
                           </StyledTableCell>
                         </StyledTableRow>
@@ -281,6 +351,38 @@ const HouseList = () => {
               onRowsPerPageChange={handleChangeRowsPerPage}
             />
           </StyledPaper>
+        </Wrapper>
+        <Wrapper
+          flexDirection='column'
+          style={{ backgroundColor: '#f4f7fc', padding: '44px' }}
+        >
+          <FormControl variant='outlined' sx={{ m: 1, minWidth: 250 }}>
+            <InputLabel id='select-post-code-label'>
+              SELECT POST CODE
+            </InputLabel>
+            <Select
+              labelId='select-post-code-label'
+              id='post-code-select-outlined'
+              value={selectedPostCode}
+              onChange={handleChangePostCode}
+            >
+              {postCode.payload.map((p, index) => {
+                return (
+                  <MenuItem key={`${p.post_code}-${index}`} value={p.post_code}>
+                    {p.post_code}
+                  </MenuItem>
+                )
+              })}
+            </Select>
+          </FormControl>
+          <div>
+            <Typography align='left' color='#3C64B1'>
+              Average : {postCodeDetail.average}
+            </Typography>
+            <Typography align='left' color='#3C64B1'>
+              Median : {postCodeDetail.median}
+            </Typography>
+          </div>
         </Wrapper>
       </Content>
     </Container>

@@ -12,8 +12,6 @@ const OverrideButton = styled(BaseButton)<ButtonProps>`
   &.MuiButton-root {
     height: 45px;
     font-weight: 400;
-    font-size: 16px;
-    line-height: 24px;
     width: ${(props) => `${props.width}px`};
   }
 `
@@ -36,6 +34,7 @@ export const SuccessButton = styled(Button)<ButtonProps>`
     }
   }
 `
+
 export const ConnectButton = styled(Button)<ButtonProps>`
   &.MuiButton-root {
     color: #ffffff;
@@ -43,6 +42,46 @@ export const ConnectButton = styled(Button)<ButtonProps>`
     border-radius: 4px;
     &:hover {
       background: #1a4087;
+    }
+  }
+`
+
+export const OutlinedButton = styled(Button)<ButtonProps>`
+  &.MuiButton-root {
+    color: #7c7e82;
+    border-radius: 4px;
+    border: 1px solid #c0c5ce;
+  }
+`
+
+export const ViewDetailButton = styled(Button)<ButtonProps>`
+  &.MuiButton-root {
+    color: #ff9900;
+    border-radius: 20px;
+    background-color: #fff7e6;
+    border: none;
+    box-shadow: none;
+    height: auto;
+    &:hover {
+      background: #fceece;
+      border: none;
+      box-shadow: none;
+    }
+  }
+`
+
+export const DeleteButton = styled(Button)<ButtonProps>`
+  &.MuiButton-root {
+    color: #b93e5c;
+    border-radius: 20px;
+    background-color: #fdf4f7;
+    border: none;
+    box-shadow: none;
+    height: auto;
+    &:hover {
+      background: #f2dbe3;
+      border: none;
+      box-shadow: none;
     }
   }
 `
