@@ -1,5 +1,5 @@
 import React from 'react'
-import HouseList from './houseList'
+import HouseList from './HouseList'
 
 function App() {
   return <HouseList />

@@ -8,7 +8,7 @@ interface InputWithLabelProps extends OutlinedInputProps {
 }
 const CustomOutlineInput = styled(OutlinedInput)<InputWithLabelProps>`
   &.MuiOutlinedInput-root {
-    height: 53px;
+    height: 45px;
     border-radius: 4;
     background-color: #fff;
     border: 1px solid #8d9196;
